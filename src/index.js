@@ -3,32 +3,52 @@
 const http = require('node:http');
 const { URL } = require('node:url');
 
-const PORT = Number.parseInt(process.env.PORT || '3000', 10);
+const DEFAULT_PORT = Number.parseInt(process.env.PORT || '3000', 10);
 
-const server = http.createServer((req, res) => {
-  const requestUrl = new URL(req.url, `http://${req.headers.host}`);
+function createRequestHandler() {
+  return (req, res) => {
+    const host = req.headers.host || `localhost:${DEFAULT_PORT}`;
+    const requestUrl = new URL(req.url, `http://${host}`);
 
-  if (requestUrl.pathname === '/healthz') {
+    if (requestUrl.pathname === '/healthz') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(
+        JSON.stringify({
+          status: 'ok',
+          uptimeSeconds: process.uptime(),
+          timestamp: new Date().toISOString(),
+        })
+      );
+      return;
+    }
+
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(
       JSON.stringify({
-        status: 'ok',
-        uptimeSeconds: process.uptime(),
-        timestamp: new Date().toISOString(),
+        message: 'Railway deployment automation placeholder service',
+        healthcheck: '/healthz',
       })
     );
-    return;
-  }
+  };
+}
 
-  res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(
-    JSON.stringify({
-      message: 'Railway deployment automation placeholder service',
-      healthcheck: '/healthz',
-    })
-  );
-});
+function createServer() {
+  return http.createServer(createRequestHandler());
+}
 
-server.listen(PORT, () => {
-  console.log(`HTTP server listening on port ${PORT}`);
-});
+function start(port = DEFAULT_PORT) {
+  const server = createServer();
+  server.listen(port, () => {
+    console.log(`HTTP server listening on port ${server.address().port}`);
+  });
+  return server;
+}
+
+if (require.main === module) {
+  start();
+}
+
+module.exports = {
+  createServer,
+  start,
+};
