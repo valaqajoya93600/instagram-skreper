@@ -1,0 +1,120 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  quality:
+    name: Quality checks (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['18.x', '20.x']
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: app
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      CI: true
+      DATABASE_URL: postgres://ci:ci@postgres:5432/app
+      REDIS_URL: redis://redis:6379
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run unit tests with coverage
+        run: npm run test:unit -- --coverage
+
+      - name: Run integration tests
+        run: npm run test:integration
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright suite
+        run: npm run test:e2e
+
+      - name: Security audit
+        run: npm run audit
+
+      - name: Build backend Docker image
+        run: docker build -t railway-automation-backend .
+
+      - name: Build frontend Docker image if available
+        run: |
+          if [ -f frontend/Dockerfile ]; then
+            docker build -t railway-automation-frontend frontend
+          else
+            echo "No frontend Dockerfile found. Skipping frontend build."
+          fi
+
+      - name: Upload coverage artifacts
+        if: matrix.node == '20.x'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: coverage
+          if-no-files-found: warn
+
+      - name: Report coverage summary
+        if: matrix.node == '20.x'
+        run: |
+          if [ -f coverage/coverage-summary.json ]; then
+            node <<'NODE'
+const summary = require('./coverage/coverage-summary.json');
+const sections = ['lines', 'statements', 'branches', 'functions'];
+console.log('Coverage summary:');
+for (const key of sections) {
+  const data = summary.total[key];
+  if (!data) continue;
+  const label = key[0].toUpperCase() + key.slice(1);
+  console.log(`${label}: ${data.pct}% (${data.covered}/${data.total})`);
+}
+NODE
+          else
+            echo "No coverage summary generated."
+          fi
+
+      - name: Upload documentation artifact
+        if: matrix.node == '20.x'
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-docs
+          path: |
+            DEPLOYMENT.md
+            README.md
+            CONTRIBUTING.md
+          if-no-files-found: ignore

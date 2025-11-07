@@ -6,9 +6,24 @@
   "scripts": {
     "start": "node src/index.js",
     "deploy": "node scripts/deploy.js",
-    "migrate": "node scripts/migrate.js"
+    "migrate": "node scripts/migrate.js",
+    "lint": "eslint .",
+    "test": "jest --selectProjects unit",
+    "test:unit": "jest --selectProjects unit",
+    "test:integration": "jest --selectProjects integration --runInBand",
+    "test:coverage": "jest --coverage --selectProjects unit",
+    "test:e2e": "playwright test",
+    "ci": "npm run lint && npm run test:coverage && npm run test:integration && npm run test:e2e",
+    "audit": "npm audit --production"
   },
   "author": "",
   "license": "MIT",
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "eslint": "^8.57.0",
+    "jest": "^30.2.0",
+    "pg": "^8.16.3",
+    "redis": "^5.9.0"
+  }
 }
