@@ -2,6 +2,8 @@
 
 This document describes how to deploy the project to the Railway test/production environments using the automated tooling shipped with the repository. It captures the environment configuration, monitoring, scaling, and rollback procedures required to operate the app in production.
 
+> **New to this project?** Start with [SETUP.md](./SETUP.md) for initial setup instructions, then refer to [ARCHITECTURE.md](./ARCHITECTURE.md) to understand the system design before deploying.
+
 ---
 
 ## 1. Prerequisites
@@ -195,10 +197,23 @@ Document the deployment ID used for the rollback inside your incident notes or t
 
 ---
 
-## 12. Next Steps
+## 12. Related Documentation
+
+For comprehensive information about the system, refer to these documentation files:
+
+- **[SETUP.md](./SETUP.md)** - Complete setup guide for local development and Railway configuration
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System architecture, components, and design decisions
+- **[API.md](./API.md)** - HTTP API endpoints and health check documentation
+- **[BEST_PRACTICES.md](./BEST_PRACTICES.md)** - Operational best practices, monitoring, and security guidelines
+- **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Contribution guidelines, coding standards, and workflow
+
+---
+
+## 13. Next Steps
 
 - Replace the placeholder HTTP server in `src/index.js` with the real application entry point.
-- Integrate your migration runner within `scripts/migrate.js`.
+- Integrate your migration runner within `scripts/migrate.js` (see examples in [SETUP.md](./SETUP.md)).
 - Add automated smoke tests that can be triggered post-deploy (extend `scripts/deploy.js` accordingly).
+- Review [BEST_PRACTICES.md](./BEST_PRACTICES.md) for operational guidelines and monitoring strategies.
 
 By keeping the configuration files and documentation in sync, the Railway deployment pipeline can be executed predictably from any developer workstation or CI environment.
