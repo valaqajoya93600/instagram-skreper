@@ -1,0 +1,64 @@
+{
+  "environment": "production",
+  "envFiles": [
+    ".env.deploy",
+    ".env.production",
+    ".env"
+  ],
+  "services": [
+    {
+      "name": "web",
+      "deploy": true,
+      "migrateCommand": [
+        "npm",
+        "run",
+        "migrate"
+      ],
+      "healthCheck": {
+        "name": "API",
+        "urlEnv": "API_HEALTHCHECK_URL",
+        "expectedStatus": 200,
+        "timeoutSeconds": 180,
+        "intervalSeconds": 5,
+        "requestTimeoutSeconds": 5
+      },
+      "autoscale": {
+        "minReplicas": 1,
+        "maxReplicas": 3,
+        "cpuTargetPercentage": 65
+      }
+    },
+    {
+      "name": "worker",
+      "deploy": false,
+      "healthCheck": {
+        "name": "Worker",
+        "urlEnv": "WORKER_HEALTHCHECK_URL",
+        "expectedStatus": 200,
+        "timeoutSeconds": 180,
+        "intervalSeconds": 5,
+        "requestTimeoutSeconds": 5
+      },
+      "autoscale": {
+        "minReplicas": 0,
+        "maxReplicas": 5,
+        "cpuTargetPercentage": 50
+      }
+    },
+    {
+      "name": "queue",
+      "deploy": false,
+      "healthCheck": {
+        "name": "Queue",
+        "urlEnv": "QUEUE_HEALTHCHECK_URL",
+        "expectedStatus": 200,
+        "timeoutSeconds": 180,
+        "intervalSeconds": 5,
+        "requestTimeoutSeconds": 5
+      }
+    }
+  ],
+  "rollback": {
+    "service": "web"
+  }
+}
