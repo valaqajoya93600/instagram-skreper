@@ -1,0 +1,14 @@
+{
+  "name": "railway-deploy-automation",
+  "version": "0.1.0",
+  "description": "Deployment automation scripts and configuration for Railway.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "deploy": "node scripts/deploy.js",
+    "migrate": "node scripts/migrate.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "private": true
+}
